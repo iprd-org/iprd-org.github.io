@@ -7,8 +7,10 @@ const categorySelect = document.getElementById("category");
 
 async function load() {
 
-    stations = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
+    stations_parse = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
         .then(r => r.json());
+
+    stations = JSON.parse(stations_parse)
 
     populateFilters();
 
