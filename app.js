@@ -7,10 +7,10 @@ const categorySelect = document.getElementById("category");
 
 async function load() {
 
-    stations_parse = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
-        .then(r => r.json());
+    const data = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
+    .then(r => r.json());
 
-    stations = JSON.parse(stations_parse)
+    stations = data.stations;
 
     populateFilters();
 
@@ -18,108 +18,47 @@ async function load() {
 }
 
 function populateFilters() {
-
-    const countries = [...new Set(
-        stations.map(x => x.country).filter(Boolean)
-    )].sort();
-
+    const countries = [...new Set(stations.map(s => s.country).filter(Boolean))].sort();
     countries.forEach(country => {
-
         const option = document.createElement("option");
-
         option.value = country;
         option.textContent = country;
-
         countrySelect.appendChild(option);
     });
 
-    const categories = new Set();
-
+    const genres = new Set();
     stations.forEach(station => {
-
-        if (!station.categories)
-            return;
-
-        station.categories
-            .split(";")
-            .forEach(x => categories.add(x.trim()));
+        (station.genres || []).forEach(g => g && genres.add(g));
     });
 
-    [...categories]
-        .sort()
-        .forEach(category => {
-
-            const option = document.createElement("option");
-
-            option.value = category;
-            option.textContent = category;
-
-            categorySelect.appendChild(option);
-        });
+    [...genres].sort().forEach(genre => {
+        const option = document.createElement("option");
+        option.value = genre;
+        option.textContent = genre;
+        categorySelect.appendChild(option);
+    });
 }
 
 function render() {
-
-    const q =
-        searchBox.value
-            .toLowerCase()
-            .trim();
-
-    const country =
-        countrySelect.value;
-
-    const category =
-        categorySelect.value;
+    const q = searchBox.value.toLowerCase().trim();
+    const country = countrySelect.value;
+    const category = categorySelect.value;
 
     const filtered = stations.filter(station => {
-
-        if (
-            q &&
-            !station.name.toLowerCase().includes(q)
-        )
-            return false;
-
-        if (
-            country &&
-            station.country !== country
-        )
-            return false;
-
-        if (
-            category &&
-            !(station.categories || "")
-                .includes(category)
-        )
-            return false;
-
+        if (q && !(station.name || "").toLowerCase().includes(q)) return false;
+        if (country && station.country !== country) return false;
+        if (category && !(station.genres || []).includes(category)) return false;
         return true;
     });
 
-    results.innerHTML =
-        filtered.map(station => `
-            <div class="card">
-
-                <h3>${station.name}</h3>
-
-                <div class="meta">
-                    ${station.country}
-                </div>
-
-                <div class="meta">
-                    ${station.categories || ""}
-                </div>
-
-                ${
-                    station.website
-                    ? `<a href="${station.website}" target="_blank">
-                        Website
-                       </a>`
-                    : ""
-                }
-
-            </div>
-        `)
-        .join("");
+    results.innerHTML = filtered.map(station => `
+        <div class="card">
+            <h3>${station.name}</h3>
+            <div class="meta">${station.country || ""}</div>
+            <div class="meta">${(station.genres || []).join(", ")}</div>
+            ${station.website ? `<a href="${station.website}" target="_blank">Website</a>` : ""}
+        </div>
+    `).join("");
 }
 
 searchBox.addEventListener("input", render);
