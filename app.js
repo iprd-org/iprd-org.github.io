@@ -6,11 +6,13 @@ const countrySelect = document.getElementById("country");
 const categorySelect = document.getElementById("category");
 
 async function load() {
-
     const data = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
+    .then(r => r.json());
+    const genres = await fetch("https://raw.githubusercontent.com/iprd-org/radio-database/refs/heads/main/data/genres.json")
     .then(r => r.json());
 
     stations = data.stations;
+    genres = data.genres.categories;
 
     populateFilters();
 
@@ -18,7 +20,10 @@ async function load() {
 }
 
 function populateFilters() {
-    const countries = [...new Set(stations.map(s => s.country).filter(Boolean))].sort();
+    const countries = [...new Set(
+        stations.map(s => s.country).filter(Boolean)
+    )].sort();
+
     countries.forEach(country => {
         const option = document.createElement("option");
         option.value = country;
@@ -26,15 +31,28 @@ function populateFilters() {
         countrySelect.appendChild(option);
     });
 
-    const genres = new Set();
-    stations.forEach(station => {
-        (station.genres || []).forEach(g => g && genres.add(g));
+    const genreToCategory = new Map();
+
+    categories.forEach(category => {
+        (category.subgenres || []).forEach(subgenre => {
+            genreToCategory.set(subgenre.key, category.key);
+        });
     });
 
-    [...genres].sort().forEach(genre => {
+    stations.forEach(station => {
+        (station.genres || []).forEach(genreKey => {
+            const categoryKey = genreToCategory.get(genreKey);
+
+            if (categoryKey) {
+                genres.add(categoryKey);
+            }
+        });
+    });
+
+    [...genres].sort().forEach(categoryKey => {
         const option = document.createElement("option");
-        option.value = genre;
-        option.textContent = genre;
+        option.value = categoryKey;
+        option.textContent = categoryKey;
         categorySelect.appendChild(option);
     });
 }
