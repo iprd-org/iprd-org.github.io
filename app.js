@@ -12,7 +12,7 @@ async function load() {
     .then(r => r.json());
 
     stations = data.stations;
-    genres = data.genres.categories;
+    genres = genres.categories;
 
     populateFilters();
 
