@@ -8,11 +8,11 @@ const categorySelect = document.getElementById("category");
 async function load() {
     const data = await fetch("https://raw.githubusercontent.com/iprd-org/iprd/refs/heads/main/docs/site_data/metadata/catalog.json")
     .then(r => r.json());
-    const genres = await fetch("https://raw.githubusercontent.com/iprd-org/radio-database/refs/heads/main/data/genres.json")
+    const genres_retrieve = await fetch("https://raw.githubusercontent.com/iprd-org/radio-database/refs/heads/main/data/genres.json")
     .then(r => r.json());
 
     stations = data.stations;
-    genres = genres.categories;
+    genres = genres_retrieve.categories;
 
     populateFilters();
 
